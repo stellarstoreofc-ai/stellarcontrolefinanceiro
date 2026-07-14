@@ -109,6 +109,9 @@
     .outro-custo-row{flex-wrap:wrap;}
     .chart-card{padding:16px;}
     .summary-card{padding:14px 16px;}
+    .item-actions{flex-wrap:wrap;}
+    .config-taxas summary{width:100%;justify-content:center;}
+    .tabs-sm .tab{flex:1 1 auto;text-align:center;}
   }
 
   .btn{
@@ -253,6 +256,28 @@
   .produto-preview .card-value{font-size:20px;font-weight:800;color:var(--green);}
   .produto-preview .card-value.valor-negativo{color:var(--red);}
   .produto-preview-aviso{color:var(--red);font-size:12.5px;font-weight:700;margin-top:10px;}
+
+  .campo-valor-calc{font-size:12px;color:var(--muted);margin-top:6px;}
+
+  .config-taxas{margin-top:18px;padding-top:18px;border-top:1px solid var(--border);}
+  .config-taxas summary{
+    cursor:pointer;font-weight:800;font-size:14.5px;color:var(--navy);list-style:none;user-select:none;
+    display:inline-flex;align-items:center;gap:8px;
+    padding:12px 18px;border-radius:10px;border:1.5px solid var(--navy);background:var(--surface);
+    transition:background .15s, color .15s;
+  }
+  .config-taxas summary::-webkit-details-marker{display:none;}
+  .config-taxas summary::before{content:'⚙️ ▸';}
+  .config-taxas[open] summary::before{content:'⚙️ ▾';}
+  .config-taxas summary:hover{background:var(--bg);}
+  .config-taxas[open] summary{background:var(--navy);color:#fff;}
+  .config-taxas-body{margin-top:16px;}
+
+  .tabs-sm{gap:6px;padding:0;background:transparent;border:none;}
+  .tabs-sm .tab{
+    padding:8px 12px;font-size:12.5px;border:1px solid var(--border);background:var(--surface);color:var(--text);
+  }
+  .tabs-sm .tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
 
   .quick-panel{display:none;margin-top:16px;}
   .quick-panel.active{display:block;}
@@ -706,55 +731,21 @@
           <option value="tiktok" style="color:#000;">TikTok Shop</option>
         </select>
       </div>
+      <div class="field">
+        <label>Custo do produto (R$)</label>
+        <input type="number" id="pCustoProduto" step="0.01" min="0" placeholder="0,00">
+      </div>
+
       <div class="field-row">
         <div class="field">
-          <label>Custo do produto (R$)</label>
-          <input type="number" id="pCustoProduto" step="0.01" min="0" placeholder="0,00">
-        </div>
-        <div class="field">
-          <label>Custo fixo da operação (R$)</label>
-          <input type="number" id="pCustoFixoOperacao" step="0.01" min="0" placeholder="0,00">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Taxa fixa marketplace (R$)</label>
-          <input type="number" id="pTaxaFixa" step="0.01" min="0" placeholder="4,00">
-        </div>
-        <div class="field">
-          <label>Comissão marketplace (%)</label>
-          <input type="number" id="pComissaoMarketplace" step="0.01" min="0" max="100" placeholder="18">
-        </div>
-      </div>
-      <div class="field" id="pFreteWrap" style="display:none;">
-        <label>Frete (%)</label>
-        <input type="number" id="pFreteMarketplace" step="0.01" min="0" max="100" placeholder="6">
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Comissão afiliado (%)</label>
+          <label>Comissão do afiliado (%)</label>
           <input type="number" id="pComissaoAfiliado" step="0.01" min="0" max="100" placeholder="10">
-        </div>
-        <div class="field">
-          <label>Imposto (%)</label>
-          <input type="number" id="pImposto" step="0.01" min="0" max="100" placeholder="Ex: 6">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Custo de embalagem (R$)</label>
-          <input type="number" id="pCustoEmbalagem" step="0.01" min="0" placeholder="0,00">
+          <div class="campo-valor-calc">Valor: <span id="pComissaoAfiliadoValor">R$ 0,00</span></div>
         </div>
         <div class="field">
           <label>Custo de ads (R$)</label>
           <input type="number" id="pCustoAds" step="0.01" min="0" placeholder="0,00">
         </div>
-      </div>
-
-      <div class="field">
-        <label>Outros custos</label>
-        <div id="outrosCustosList"></div>
-        <button type="button" class="btn btn-outline btn-sm" id="btnAddOutroCusto">+ Adicionar custo</button>
       </div>
 
       <div class="field">
@@ -781,15 +772,51 @@
       <div class="produto-preview">
         <div class="summary-grid">
           <div class="summary-card">
-            <div class="label">Margem de contribuição</div>
-            <div class="card-value" id="prodMargem">0%</div>
-          </div>
-          <div class="summary-card">
             <div class="label">Lucro</div>
             <div class="card-value" id="prodLucro">R$ 0,00</div>
           </div>
         </div>
       </div>
+
+      <details class="config-taxas">
+        <summary>Configurar taxas do marketplace</summary>
+        <div class="config-taxas-body">
+          <div class="field-row">
+            <div class="field">
+              <label>Custo fixo da operação (R$)</label>
+              <input type="number" id="pCustoFixoOperacao" step="0.01" min="0" placeholder="0,00">
+            </div>
+            <div class="field">
+              <label>Taxa fixa marketplace (R$)</label>
+              <input type="number" id="pTaxaFixa" step="0.01" min="0" placeholder="4,00">
+            </div>
+          </div>
+          <div id="pMlConfigWrap" style="display:none;"></div>
+          <div class="field-row">
+            <div class="field">
+              <label>Comissão marketplace (%)</label>
+              <input type="number" id="pComissaoMarketplace" step="0.01" min="0" max="100" placeholder="18">
+            </div>
+            <div class="field">
+              <label>Imposto (%)</label>
+              <input type="number" id="pImposto" step="0.01" min="0" max="100" placeholder="Ex: 4">
+            </div>
+          </div>
+          <div class="field" id="pFreteWrap" style="display:none;">
+            <label>Frete (%)</label>
+            <input type="number" id="pFreteMarketplace" step="0.01" min="0" max="100" placeholder="6">
+          </div>
+          <div class="field">
+            <label>Custo de embalagem (R$)</label>
+            <input type="number" id="pCustoEmbalagem" step="0.01" min="0" placeholder="0,00">
+          </div>
+          <div class="field">
+            <label>Outros custos</label>
+            <div id="outrosCustosList"></div>
+            <button type="button" class="btn btn-outline btn-sm" id="btnAddOutroCusto">+ Adicionar custo</button>
+          </div>
+        </div>
+      </details>
 
       <div class="modal-actions">
         <button type="button" class="btn btn-outline" id="btnCancelarProduto">Cancelar</button>
@@ -1552,6 +1579,7 @@ function renderProdutos(){
               </select>
             </div>
           </div>
+          <div id="${pt}MlConfigWrap" style="${mktSelecionado === 'ml' ? '' : 'display:none;'}">${gerarSubtabsMl(pt)}</div>
           <div class="field-row">
             <div class="field">
               <label>Taxa fixa marketplace (R$)</label>
@@ -1575,9 +1603,18 @@ function renderProdutos(){
       </div>
     `;
   }).join('');
+
+  if(produtoTaxasAbertoId) marcarSubtabsAtivas('pt' + produtoTaxasAbertoId);
 }
 
 document.getElementById('produtosList').addEventListener('click', e => {
+  const subtab = e.target.closest('.subtab');
+  if(subtab){
+    document.getElementById(subtab.dataset.prefix + subtab.dataset.campo).value = subtab.dataset.valor;
+    marcarSubtabsAtivas(subtab.dataset.prefix);
+    return;
+  }
+
   const btn = e.target.closest('button[data-action]');
   if(!btn) return;
   const id = btn.dataset.id;
@@ -1618,6 +1655,7 @@ document.getElementById('produtosList').addEventListener('change', e => {
   const prefix = 'pt' + id;
   const valor = select.value;
   document.getElementById(prefix + 'FreteWrap').style.display = valor === 'tiktok' ? '' : 'none';
+  document.getElementById(prefix + 'MlConfigWrap').style.display = valor === 'ml' ? '' : 'none';
   if(!valor) return;
   if(valor === 'tiktok'){
     const produto = produtos.find(p => p.id === id);
@@ -1697,8 +1735,13 @@ function atualizarVisibilidadeFreteModal(){
   document.getElementById('pFreteWrap').style.display = document.getElementById('pMarketplace').value === 'tiktok' ? '' : 'none';
 }
 
+function atualizarVisibilidadeMlModal(){
+  document.getElementById('pMlConfigWrap').style.display = document.getElementById('pMarketplace').value === 'ml' ? '' : 'none';
+}
+
 document.getElementById('pMarketplace').addEventListener('change', e => {
   atualizarVisibilidadeFreteModal();
+  atualizarVisibilidadeMlModal();
   if(e.target.value){
     if(e.target.value === 'tiktok'){
       ajustarFaixaTiktokModal();
@@ -1720,16 +1763,29 @@ function atualizarPreview(campos, prefixoSaida){
   const { lucro, margem } = resultadoProduto(campos);
 
   const elPreco = document.getElementById(prefixoSaida + 'PrecoRecomendado');
+  // Margem de contribuição fica escondida da visão simplificada — só existe
+  // no DOM se algum template ainda a expuser.
   const elMargem = document.getElementById(prefixoSaida + 'Margem');
   const elLucro = document.getElementById(prefixoSaida + 'Lucro');
 
   elPreco.textContent = preco === null ? '—' : fmt(preco);
-  elMargem.textContent = `${margem.toFixed(1)}%`;
+  if(elMargem){
+    elMargem.textContent = `${margem.toFixed(1)}%`;
+    marcarValorNegativo(elMargem, margem < 0);
+  }
   elLucro.textContent = fmt(lucro);
 
   marcarValorNegativo(elPreco, preco === null);
-  marcarValorNegativo(elMargem, margem < 0);
   marcarValorNegativo(elLucro, lucro < 0);
+
+  // Comissão do afiliado é cobrada em %, mas mostrar o valor em R$ ajuda quem
+  // não quer fazer a conta de cabeça — usa o preço de venda já digitado, ou
+  // o recomendado como referência enquanto o preço de venda ainda está vazio.
+  const elComissaoAfiliadoValor = document.getElementById(prefixoSaida + 'ComissaoAfiliadoValor');
+  if(elComissaoAfiliadoValor){
+    const precoRef = campos.precoVenda > 0 ? campos.precoVenda : (preco || 0);
+    elComissaoAfiliadoValor.textContent = fmt(precoRef * (campos.comissaoAfiliado || 0) / 100);
+  }
 
   const aviso = document.getElementById(prefixoSaida + 'Aviso');
   if(preco === null){
@@ -1780,11 +1836,13 @@ function openModalProduto(produto = null){
   const mktSalvo = produto ? (produto.marketplace || '') : '';
   document.getElementById('pMarketplace').value = mktSalvo.startsWith('tiktok') ? 'tiktok' : mktSalvo;
   atualizarVisibilidadeFreteModal();
+  atualizarVisibilidadeMlModal();
   document.getElementById('pCustoProduto').value = produto ? produto.custoProduto : '';
   document.getElementById('pCustoFixoOperacao').value = produto ? produto.custoFixoOperacao : custoFixoPorPedido().toFixed(2);
   document.getElementById('pTaxaFixa').value = produto ? produto.taxaFixaMarketplace : '';
   document.getElementById('pComissaoMarketplace').value = produto ? produto.comissaoMarketplace : '';
   document.getElementById('pFreteMarketplace').value = produto ? (produto.freteMarketplace || 0) : 0;
+  marcarSubtabsAtivas('p');
   document.getElementById('pComissaoAfiliado').value = produto ? produto.comissaoAfiliado : 0;
   document.getElementById('pImposto').value = produto ? produto.imposto : '';
   document.getElementById('pCustoEmbalagem').value = produto ? produto.custoEmbalagem : '';
@@ -1816,11 +1874,11 @@ function closeModalProduto(){
 // TikTok também cobra frete (%) separado da comissão — cliente específico, então
 // vem como campo à parte em vez de já embutido na comissão marketplace.
 const MARKETPLACE_PRESETS = [
-  { id: 'shopee',          label: 'Shopee',                              taxaFixa: 4,    comissaoMarketplace: 18 },
-  { id: 'ml',               label: 'Mercado Livre',                       taxaFixa: 6.75, comissaoMarketplace: 19 },
-  { id: 'shein',            label: 'Shein',                               taxaFixa: 5,    comissaoMarketplace: 18 },
-  { id: 'tiktok_ate50',     label: 'TikTok Shop',                        taxaFixa: 4,    comissaoMarketplace: 10, freteMarketplace: 6 },
-  { id: 'tiktok_acima50',   label: 'TikTok Shop',                        taxaFixa: 6,    comissaoMarketplace: 6,  freteMarketplace: 6 }
+  { id: 'shopee',          label: 'Shopee',                              taxaFixa: 4,     comissaoMarketplace: 18 },
+  { id: 'ml',               label: 'Mercado Livre',                       taxaFixa: 13.85, comissaoMarketplace: 14 },
+  { id: 'shein',            label: 'Shein',                               taxaFixa: 5,     comissaoMarketplace: 18 },
+  { id: 'tiktok_ate50',     label: 'TikTok Shop',                        taxaFixa: 4,     comissaoMarketplace: 10, freteMarketplace: 6 },
+  { id: 'tiktok_acima50',   label: 'TikTok Shop',                        taxaFixa: 6,     comissaoMarketplace: 6,  freteMarketplace: 6 }
 ];
 
 function aplicarPreset(prefix, presetId){
@@ -1830,7 +1888,57 @@ function aplicarPreset(prefix, presetId){
   document.getElementById(prefix + 'ComissaoMarketplace').value = preset.comissaoMarketplace;
   const freteEl = document.getElementById(prefix + 'FreteMarketplace');
   if(freteEl) freteEl.value = preset.freteMarketplace || 0;
+  marcarSubtabsAtivas(prefix);
 }
+
+// Mercado Livre tem dois ajustes independentes da taxa fixa/comissão-padrão:
+// tipo de anúncio (muda a comissão) e tipo de frete (muda a taxa fixa). Os
+// valores de R$ do frete continuam editáveis depois de escolher o botão.
+const ML_ANUNCIO_PRESETS = [
+  { id: 'classico', label: 'Clássico', comissaoMarketplace: 14 },
+  { id: 'premium',  label: 'Premium',  comissaoMarketplace: 19 }
+];
+const ML_FRETE_PRESETS = [
+  { id: 'gratis',     label: 'Frete grátis',                 taxaFixa: 13.85 },
+  { id: 'comprador',  label: 'Frete por conta do comprador', taxaFixa: 7.95 }
+];
+
+function gerarSubtabsMl(prefix){
+  return `
+    <div class="field">
+      <label>Tipo de anúncio (Mercado Livre)</label>
+      <div class="tabs tabs-sm">
+        ${ML_ANUNCIO_PRESETS.map(o => `<button type="button" class="tab subtab" data-prefix="${prefix}" data-campo="ComissaoMarketplace" data-valor="${o.comissaoMarketplace}">${o.label} (${o.comissaoMarketplace}%)</button>`).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label>Frete (Mercado Livre)</label>
+      <div class="tabs tabs-sm">
+        ${ML_FRETE_PRESETS.map(o => `<button type="button" class="tab subtab" data-prefix="${prefix}" data-campo="TaxaFixa" data-valor="${o.taxaFixa}">${o.label} (${fmt(o.taxaFixa)})</button>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// Marca como ativo o botão de anúncio/frete cujo valor bate com o que está
+// nos campos agora — assim reabrir um produto já salvo destaca a opção
+// certa, e editar o número manualmente simplesmente tira o destaque.
+function marcarSubtabsAtivas(prefix){
+  document.querySelectorAll(`.subtab[data-prefix="${prefix}"]`).forEach(btn => {
+    const campoEl = document.getElementById(btn.dataset.prefix + btn.dataset.campo);
+    const ativo = !!campoEl && parseFloat(campoEl.value) === parseFloat(btn.dataset.valor);
+    btn.classList.toggle('active', ativo);
+  });
+}
+
+document.getElementById('pMlConfigWrap').innerHTML = gerarSubtabsMl('p');
+document.getElementById('pMlConfigWrap').addEventListener('click', e => {
+  const subtab = e.target.closest('.subtab');
+  if(!subtab) return;
+  document.getElementById(subtab.dataset.prefix + subtab.dataset.campo).value = subtab.dataset.valor;
+  marcarSubtabsAtivas(subtab.dataset.prefix);
+  atualizarPreviewProduto();
+});
 
 function marketplaceLabel(presetId){
   if(!presetId) return null;
@@ -1851,68 +1959,30 @@ function faixaTiktokPeloPreco(preco){
 
 const MARKETPLACES_QUICK = [
   { id: 'shopee', prefix: 'qShopee', preset: 'shopee' },
-  { id: 'ml',     prefix: 'qMl',     preset: 'ml' },
+  { id: 'ml',     prefix: 'qMl',     preset: 'ml', ehMl: true },
   { id: 'shein',  prefix: 'qShein',  preset: 'shein' },
   { id: 'tiktok', prefix: 'qTiktok', preset: 'tiktok_ate50', ehTiktok: true }
 ];
 
-function gerarPainelQuickCalc(prefix, ehTiktok){
+function gerarPainelQuickCalc(prefix, ehTiktok, ehMl){
   const avisoTiktok = ehTiktok ? `<p style="font-size:12px;color:var(--muted);margin:0 0 12px;">A faixa de comissão (até R$50 / acima de R$50) muda automaticamente conforme o preço de venda informado.</p>` : '';
   return `
     ${avisoTiktok}
-    <div class="field-row">
-      <div class="field">
-        <label>Custo do produto (R$)</label>
-        <input type="number" id="${prefix}CustoProduto" step="0.01" min="0" placeholder="0,00">
-      </div>
-      <div class="field">
-        <label>Custo fixo da operação (R$)</label>
-        <input type="number" id="${prefix}CustoFixoOperacao" step="0.01" min="0" placeholder="0,00">
-      </div>
-    </div>
-    <button type="button" class="btn btn-outline btn-sm" data-action="puxar-custo-fixo">↻ Usar custo fixo calculado</button>
-
-    <div class="field-row" style="margin-top:14px;">
-      <div class="field">
-        <label>Taxa fixa marketplace (R$)</label>
-        <input type="number" id="${prefix}TaxaFixa" step="0.01" min="0" placeholder="0,00">
-      </div>
-      <div class="field">
-        <label>Comissão marketplace (%)</label>
-        <input type="number" id="${prefix}ComissaoMarketplace" step="0.01" min="0" max="100" placeholder="0">
-      </div>
-    </div>
-    ${ehTiktok ? `
     <div class="field">
-      <label>Frete (%)</label>
-      <input type="number" id="${prefix}FreteMarketplace" step="0.01" min="0" max="100" placeholder="6">
+      <label>Custo do produto (R$)</label>
+      <input type="number" id="${prefix}CustoProduto" step="0.01" min="0" placeholder="0,00">
     </div>
-    ` : ''}
+
     <div class="field-row">
       <div class="field">
-        <label>Comissão afiliado (%)</label>
+        <label>Comissão do afiliado (%)</label>
         <input type="number" id="${prefix}ComissaoAfiliado" step="0.01" min="0" max="100" placeholder="0">
-      </div>
-      <div class="field">
-        <label>Imposto (%)</label>
-        <input type="number" id="${prefix}Imposto" step="0.01" min="0" max="100" placeholder="Ex: 6">
-      </div>
-    </div>
-    <div class="field-row">
-      <div class="field">
-        <label>Custo de embalagem (R$)</label>
-        <input type="number" id="${prefix}CustoEmbalagem" step="0.01" min="0" placeholder="0,00">
+        <div class="campo-valor-calc">Valor: <span id="${prefix}ComissaoAfiliadoValor">R$ 0,00</span></div>
       </div>
       <div class="field">
         <label>Custo de ads (R$)</label>
         <input type="number" id="${prefix}CustoAds" step="0.01" min="0" placeholder="0,00">
       </div>
-    </div>
-
-    <div class="field">
-      <label>Outros custos</label>
-      <div id="${prefix}OutrosCustosList"></div>
-      <button type="button" class="btn btn-outline btn-sm" data-action="add-outro-custo">+ Adicionar custo</button>
     </div>
 
     <div class="field">
@@ -1939,15 +2009,55 @@ function gerarPainelQuickCalc(prefix, ehTiktok){
     <div class="produto-preview">
       <div class="summary-grid">
         <div class="summary-card">
-          <div class="label">Margem de contribuição</div>
-          <div class="card-value" id="${prefix}Margem">0%</div>
-        </div>
-        <div class="summary-card">
           <div class="label">Lucro</div>
           <div class="card-value" id="${prefix}Lucro">R$ 0,00</div>
         </div>
       </div>
     </div>
+
+    <details class="config-taxas">
+      <summary>Configurar taxas do marketplace</summary>
+      <div class="config-taxas-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Custo fixo da operação (R$)</label>
+            <input type="number" id="${prefix}CustoFixoOperacao" step="0.01" min="0" placeholder="0,00">
+          </div>
+          <div class="field">
+            <label>Taxa fixa marketplace (R$)</label>
+            <input type="number" id="${prefix}TaxaFixa" step="0.01" min="0" placeholder="0,00">
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" data-action="puxar-custo-fixo">↻ Usar custo fixo calculado</button>
+
+        ${ehMl ? gerarSubtabsMl(prefix) : ''}
+        <div class="field-row" style="margin-top:14px;">
+          <div class="field">
+            <label>Comissão marketplace (%)</label>
+            <input type="number" id="${prefix}ComissaoMarketplace" step="0.01" min="0" max="100" placeholder="0">
+          </div>
+          <div class="field">
+            <label>Imposto (%)</label>
+            <input type="number" id="${prefix}Imposto" step="0.01" min="0" max="100" placeholder="Ex: 4">
+          </div>
+        </div>
+        ${ehTiktok ? `
+        <div class="field">
+          <label>Frete (%)</label>
+          <input type="number" id="${prefix}FreteMarketplace" step="0.01" min="0" max="100" placeholder="6">
+        </div>
+        ` : ''}
+        <div class="field">
+          <label>Custo de embalagem (R$)</label>
+          <input type="number" id="${prefix}CustoEmbalagem" step="0.01" min="0" placeholder="0,00">
+        </div>
+        <div class="field">
+          <label>Outros custos</label>
+          <div id="${prefix}OutrosCustosList"></div>
+          <button type="button" class="btn btn-outline btn-sm" data-action="add-outro-custo">+ Adicionar custo</button>
+        </div>
+      </div>
+    </details>
   `;
 }
 
@@ -1955,7 +2065,7 @@ function initQuickCalcPanels(){
   const container = document.getElementById('quickCalcPanels');
   container.innerHTML = MARKETPLACES_QUICK.map((m, idx) => `
     <div class="quick-panel ${idx === 0 ? 'active' : ''}" id="panel-quick-${m.id}" data-prefix="${m.prefix}" ${m.ehTiktok ? 'data-tiktok="true"' : ''}>
-      ${gerarPainelQuickCalc(m.prefix, m.ehTiktok)}
+      ${gerarPainelQuickCalc(m.prefix, m.ehTiktok, m.ehMl)}
     </div>
   `).join('');
 
@@ -1979,6 +2089,14 @@ function initQuickCalcPanels(){
 
     if(e.target.classList.contains('oc-remove')){
       e.target.closest('.outro-custo-row').remove();
+      atualizarPreview(lerCampos(prefix, outrosContainerId), prefix);
+      return;
+    }
+
+    const subtab = e.target.closest('.subtab');
+    if(subtab){
+      document.getElementById(subtab.dataset.prefix + subtab.dataset.campo).value = subtab.dataset.valor;
+      marcarSubtabsAtivas(subtab.dataset.prefix);
       atualizarPreview(lerCampos(prefix, outrosContainerId), prefix);
       return;
     }
