@@ -195,25 +195,6 @@
   }
   .empty-state h3{color:var(--text);margin-bottom:6px;font-size:17px;}
 
-  /* Categorias */
-  .cat-resumo{margin-bottom:16px;font-size:13.5px;color:var(--muted);}
-  .cat-resumo strong{color:var(--text);}
-  .cat-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);margin-bottom:10px;}
-  .cat-row-header{width:100%;text-align:left;background:transparent;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;}
-  .cat-row-top{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14.5px;margin-bottom:8px;}
-  .cat-row-top .cat-count{color:var(--muted);font-weight:600;font-size:12.5px;margin-left:6px;}
-  .cat-row-right{display:flex;align-items:center;gap:10px;}
-  .cat-arrow{color:var(--muted);font-size:12px;transition:transform .2s;}
-  .cat-row.expanded .cat-arrow{transform:rotate(180deg);}
-  .cat-bar{height:8px;border-radius:6px;background:var(--bg);overflow:hidden;}
-  .cat-bar-fill{height:100%;background:var(--accent);border-radius:6px;}
-  .cat-sub{margin-top:9px;font-size:12px;color:var(--muted);font-weight:600;}
-  .cat-detail{display:none;flex-direction:column;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
-  .cat-row.expanded .cat-detail{display:flex;}
-  .cat-detail-item{display:flex;align-items:center;gap:10px;font-size:13px;flex-wrap:wrap;}
-  .cat-detail-desc{flex:1;min-width:140px;font-weight:600;}
-  .cat-detail-date{color:var(--muted);min-width:75px;}
-  .cat-detail-valor{font-weight:700;min-width:95px;text-align:right;}
 
   /* Lembretes */
   .lembrete-item{
@@ -369,6 +350,18 @@
     width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
   }
   .month-picker-year button:hover{background:var(--bg);color:var(--text);}
+
+  .ano-picker{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;max-width:220px;
+    padding:11px 13px;border:1px solid var(--border);border-radius:10px;background:#fbfcff;
+  }
+  .ano-picker span{font-weight:800;font-size:15px;}
+  .ano-picker button{
+    background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;
+    width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  }
+  .ano-picker button:hover{background:var(--bg);color:var(--text);}
+
   .month-picker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
   .month-picker-cell{
     padding:10px 0;border-radius:8px;border:1px solid transparent;background:transparent;
@@ -458,10 +451,9 @@
       <button class="btn-menu-close" id="btnMenuClose">✕</button>
     </div>
     <nav class="side-nav" id="sideNav">
-      <button data-page="contas" class="active">📋 Contas</button>
       <button data-page="relatorio">📊 Relatório mensal</button>
-      <button data-page="categorias">🗂 Despesas por categoria</button>
       <button data-page="lembretes">✅ Lembretes</button>
+      <button data-page="contas" class="active">📋 Contas</button>
       <button data-page="custofixo">🧮 Custo fixo por pedido</button>
       <button data-page="precificacao">🏷️ Precificação de produtos</button>
     </nav>
@@ -524,67 +516,94 @@
 
       <!-- PÁGINA: RELATÓRIO MENSAL -->
       <section class="page" id="page-relatorio">
-        <div class="field" style="max-width:220px;position:relative;">
-          <label>Mês de referência</label>
-          <button type="button" class="month-picker-trigger" id="btnMesPicker">
-            <span id="mesPickerLabel">—</span>
-            <span class="month-picker-icon">📅</span>
-          </button>
-          <div class="month-picker-dropdown" id="mesPickerDropdown">
-            <div class="month-picker-year">
-              <button type="button" id="mesPickerPrevYear">‹</button>
-              <span id="mesPickerYearLabel"></span>
-              <button type="button" id="mesPickerNextYear">›</button>
+        <div class="tabs" id="relatorioTabs" style="margin-bottom:18px;">
+          <button class="tab active" data-relview="mensal">Mensal</button>
+          <button class="tab" data-relview="anual">Anual</button>
+        </div>
+
+        <div id="relatorioMensalView">
+          <div class="field" style="max-width:220px;position:relative;">
+            <label>Mês de referência</label>
+            <button type="button" class="month-picker-trigger" id="btnMesPicker">
+              <span id="mesPickerLabel">—</span>
+              <span class="month-picker-icon">📅</span>
+            </button>
+            <div class="month-picker-dropdown" id="mesPickerDropdown">
+              <div class="month-picker-year">
+                <button type="button" id="mesPickerPrevYear">‹</button>
+                <span id="mesPickerYearLabel"></span>
+                <button type="button" id="mesPickerNextYear">›</button>
+              </div>
+              <div class="month-picker-grid" id="mesPickerGrid"></div>
+              <div class="month-picker-footer">
+                <button type="button" id="mesPickerHoje">Este mês</button>
+              </div>
             </div>
-            <div class="month-picker-grid" id="mesPickerGrid"></div>
-            <div class="month-picker-footer">
-              <button type="button" id="mesPickerHoje">Este mês</button>
+          </div>
+
+          <div class="summary-grid" style="margin-top:18px;">
+            <div class="summary-card">
+              <div class="label">Faturamento do mês</div>
+              <div class="fat-display">
+                <div class="card-value" id="relFaturamento">R$ 0,00</div>
+                <button class="btn btn-outline btn-sm" id="btnEditarFaturamento">Editar</button>
+              </div>
+              <div class="fat-edit" id="fatEditRow" style="display:none;">
+                <input type="number" id="fatInput" step="0.01" min="0" placeholder="0,00">
+                <button class="btn btn-primary btn-sm" id="btnSalvarFaturamento">Salvar</button>
+              </div>
             </div>
+            <div class="summary-card entrou">
+              <div class="label">Quanto entrou (receitas)</div>
+              <div class="card-value" id="relEntrou">R$ 0,00</div>
+            </div>
+            <div class="summary-card saiu">
+              <div class="label">Quanto saiu (despesas pagas)</div>
+              <div class="card-value" id="relSaiu">R$ 0,00</div>
+            </div>
+            <div class="summary-card" id="relSaldoCard">
+              <div class="label">Saldo do mês</div>
+              <div class="card-value" id="relSaldo">R$ 0,00</div>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <h3>Faturamento por mês (últimos 12 meses)</h3>
+            <div class="chart-bars" id="faturamentoChart"></div>
           </div>
         </div>
 
-        <div class="summary-grid" style="margin-top:18px;">
-          <div class="summary-card">
-            <div class="label">Faturamento do mês</div>
-            <div class="fat-display">
-              <div class="card-value" id="relFaturamento">R$ 0,00</div>
-              <button class="btn btn-outline btn-sm" id="btnEditarFaturamento">Editar</button>
-            </div>
-            <div class="fat-edit" id="fatEditRow" style="display:none;">
-              <input type="number" id="fatInput" step="0.01" min="0" placeholder="0,00">
-              <button class="btn btn-primary btn-sm" id="btnSalvarFaturamento">Salvar</button>
-            </div>
+        <div id="relatorioAnualView" style="display:none;">
+          <div class="ano-picker">
+            <button type="button" id="anoPickerPrev">‹</button>
+            <span id="anoPickerLabel"></span>
+            <button type="button" id="anoPickerNext">›</button>
           </div>
-          <div class="summary-card entrou">
-            <div class="label">Quanto entrou (receitas)</div>
-            <div class="card-value" id="relEntrou">R$ 0,00</div>
-          </div>
-          <div class="summary-card saiu">
-            <div class="label">Quanto saiu (despesas pagas)</div>
-            <div class="card-value" id="relSaiu">R$ 0,00</div>
-          </div>
-          <div class="summary-card" id="relSaldoCard">
-            <div class="label">Saldo do mês</div>
-            <div class="card-value" id="relSaldo">R$ 0,00</div>
-          </div>
-        </div>
 
-        <div class="chart-card">
-          <h3>Faturamento por mês (últimos 12 meses)</h3>
-          <div class="chart-bars" id="faturamentoChart"></div>
-        </div>
-      </section>
+          <div class="summary-grid" style="margin-top:18px;">
+            <div class="summary-card">
+              <div class="label">Faturamento do ano</div>
+              <div class="card-value" id="relAnoFaturamento">R$ 0,00</div>
+            </div>
+            <div class="summary-card entrou">
+              <div class="label">Quanto entrou (receitas)</div>
+              <div class="card-value" id="relAnoEntrou">R$ 0,00</div>
+            </div>
+            <div class="summary-card saiu">
+              <div class="label">Quanto saiu (despesas pagas)</div>
+              <div class="card-value" id="relAnoSaiu">R$ 0,00</div>
+            </div>
+            <div class="summary-card" id="relAnoSaldoCard">
+              <div class="label">Saldo do ano</div>
+              <div class="card-value" id="relAnoSaldo">R$ 0,00</div>
+            </div>
+          </div>
 
-      <!-- PÁGINA: DESPESAS POR CATEGORIA -->
-      <section class="page" id="page-categorias">
-        <div class="toolbar">
-          <div class="tabs" id="catTabs">
-            <button class="tab active" data-catfilter="todas">Todas</button>
-            <button class="tab" data-catfilter="pago">Pagas</button>
-            <button class="tab" data-catfilter="pendente">Pendentes</button>
+          <div class="chart-card">
+            <h3>Faturamento por mês (ano selecionado)</h3>
+            <div class="chart-bars" id="faturamentoChartAnual"></div>
           </div>
         </div>
-        <div id="categoriasList"></div>
       </section>
 
       <!-- PÁGINA: LEMBRETES -->
@@ -950,7 +969,6 @@ function escapeHtml(str){
 const pageTitles = {
   contas: 'Contas',
   relatorio: 'Relatório mensal',
-  categorias: 'Despesas por categoria',
   lembretes: 'Lembretes',
   custofixo: 'Custo fixo por pedido',
   precificacao: 'Precificação de produtos'
@@ -983,8 +1001,7 @@ function showPage(name){
   document.getElementById('btnNovo').style.display = name === 'contas' ? '' : 'none';
 
   if(name === 'contas') renderContas();
-  else if(name === 'relatorio') renderRelatorio();
-  else if(name === 'categorias') renderCategorias();
+  else if(name === 'relatorio'){ renderRelatorio(); if(relatorioView === 'anual') renderRelatorioAnual(); }
   else if(name === 'lembretes') renderLembretes();
   else if(name === 'custofixo') renderCustoFixo();
   else if(name === 'precificacao') renderProdutos();
@@ -1302,83 +1319,78 @@ document.getElementById('btnSalvarFaturamento').addEventListener('click', () => 
   renderRelatorio();
 });
 
-// ================= DESPESAS POR CATEGORIA =================
-let catFilter = 'todas';
+// ---- Relatório anual (mesmos números do mensal, somados pelo ano inteiro) ----
+let relatorioView = 'mensal';
+let relatorioAno = Number(currentYm().split('-')[0]);
 
-document.getElementById('catTabs').addEventListener('click', e => {
+document.getElementById('relatorioTabs').addEventListener('click', e => {
   const tab = e.target.closest('.tab');
   if(!tab) return;
-  document.querySelectorAll('#catTabs .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#relatorioTabs .tab').forEach(t => t.classList.remove('active'));
   tab.classList.add('active');
-  catFilter = tab.dataset.catfilter;
-  renderCategorias();
+  relatorioView = tab.dataset.relview;
+  document.getElementById('relatorioMensalView').style.display = relatorioView === 'mensal' ? '' : 'none';
+  document.getElementById('relatorioAnualView').style.display = relatorioView === 'anual' ? '' : 'none';
+  if(relatorioView === 'anual') renderRelatorioAnual();
 });
 
-function renderCategorias(){
-  const container = document.getElementById('categoriasList');
-  let despesas = data.filter(i => i.tipo === 'despesa');
-  if(catFilter === 'pago') despesas = despesas.filter(i => i.status === 'pago');
-  else if(catFilter === 'pendente') despesas = despesas.filter(i => i.status === 'pendente');
+document.getElementById('anoPickerPrev').addEventListener('click', () => { relatorioAno--; renderRelatorioAnual(); });
+document.getElementById('anoPickerNext').addEventListener('click', () => { relatorioAno++; renderRelatorioAnual(); });
 
-  if(despesas.length === 0){
-    container.innerHTML = `<div class="empty-state"><h3>Nenhuma despesa encontrada</h3><p>Cadastre despesas na aba Contas para ver o resumo por categoria.</p></div>`;
-    return;
+function renderRelatorioAnual(){
+  document.getElementById('anoPickerLabel').textContent = relatorioAno;
+
+  const mesesValores = [];
+  let fatAno = 0;
+  for(let mes = 1; mes <= 12; mes++){
+    const ym = `${relatorioAno}-${String(mes).padStart(2,'0')}`;
+    const valor = faturamento[ym] || 0;
+    fatAno += valor;
+    mesesValores.push({ ym, valor });
   }
 
-  const totals = {};
-  despesas.forEach(i => {
-    totals[i.categoria] = totals[i.categoria] || {valor:0, count:0, pago:0, pendente:0, itens:[]};
-    const t = totals[i.categoria];
-    t.valor += i.valor;
-    t.count += 1;
-    if(i.status === 'pago') t.pago += i.valor; else t.pendente += i.valor;
-    t.itens.push(i);
-  });
+  const anoStr = String(relatorioAno);
+  const entrouAno = data.filter(i => i.tipo === 'receita' && i.status === 'pago' && (i.pagoEm || '').slice(0,4) === anoStr)
+    .reduce((s,i) => s + i.valor, 0);
+  const saiuAno = data.filter(i => i.tipo === 'despesa' && i.status === 'pago' && (i.pagoEm || '').slice(0,4) === anoStr)
+    .reduce((s,i) => s + i.valor, 0);
+  const saldoAno = fatAno + entrouAno - saiuAno;
 
-  const totalGeral = despesas.reduce((s,i) => s + i.valor, 0);
-  const entries = Object.entries(totals).sort((a,b) => b[1].valor - a[1].valor);
-  const max = Math.max(...entries.map(e => e[1].valor));
+  document.getElementById('relAnoFaturamento').textContent = fmt(fatAno);
+  document.getElementById('relAnoEntrou').textContent = fmt(entrouAno);
+  document.getElementById('relAnoSaiu').textContent = fmt(saiuAno);
+  document.getElementById('relAnoSaldo').textContent = fmt(saldoAno);
 
-  const resumo = `<div class="cat-resumo">Total: <strong>${fmt(totalGeral)}</strong> em ${entries.length} categoria${entries.length > 1 ? 's' : ''} e ${despesas.length} conta${despesas.length > 1 ? 's' : ''}</div>`;
+  const saldoCard = document.getElementById('relAnoSaldoCard');
+  saldoCard.classList.remove('saldo-pos','saldo-neg');
+  saldoCard.classList.add(saldoAno >= 0 ? 'saldo-pos' : 'saldo-neg');
 
-  const rows = entries.map(([categoria, info]) => {
-    const pct = totalGeral > 0 ? (info.valor / totalGeral * 100) : 0;
-    const barPct = max > 0 ? (info.valor / max * 100) : 0;
-    const itensOrdenados = [...info.itens].sort((a,b) => b.vencimento.localeCompare(a.vencimento));
-    const detalhe = itensOrdenados.map(i => {
-      const st = statusLabel(i);
-      return `
-        <div class="cat-detail-item">
-          <span class="cat-detail-desc">${escapeHtml(i.descricao)}</span>
-          <span class="badge ${st.cls}">${st.text}</span>
-          <span class="cat-detail-date">${formatDate(i.vencimento)}</span>
-          <span class="cat-detail-valor">${fmt(i.valor)}</span>
-        </div>
-      `;
-    }).join('');
-
+  const max = Math.max(...mesesValores.map(m => m.valor), 1);
+  const TRACK_HEIGHT = 130;
+  const container = document.getElementById('faturamentoChartAnual');
+  container.innerHTML = mesesValores.map(({ ym, valor }) => {
+    const alturaPx = valor > 0 ? Math.max((valor / max) * TRACK_HEIGHT, 4) : 2;
+    const mes = Number(ym.split('-')[1]);
+    const label = MESES_ABREV[mes - 1];
     return `
-      <div class="cat-row">
-        <button type="button" class="cat-row-header">
-          <div class="cat-row-top">
-            <span>${escapeHtml(categoria)}<span class="cat-count">${info.count} conta${info.count > 1 ? 's' : ''} · ${pct.toFixed(0)}%</span></span>
-            <span class="cat-row-right">${fmt(info.valor)}<span class="cat-arrow">▾</span></span>
-          </div>
-          <div class="cat-bar"><div class="cat-bar-fill" style="width:${barPct}%"></div></div>
-          <div class="cat-sub">Pago: ${fmt(info.pago)} &nbsp;·&nbsp; Pendente: ${fmt(info.pendente)}</div>
-        </button>
-        <div class="cat-detail">${detalhe}</div>
-      </div>
+      <button type="button" class="chart-bar-col" data-ym="${ym}" title="${label}: ${fmt(valor)}">
+        <span class="chart-bar-value">${valor > 0 ? fmt(valor).replace('R$', '').trim() : ''}</span>
+        <div class="chart-bar-track"><span class="chart-bar" style="height:${alturaPx}px"></span></div>
+        <span class="chart-bar-label">${label}</span>
+      </button>
     `;
   }).join('');
-
-  container.innerHTML = resumo + rows;
 }
 
-document.getElementById('categoriasList').addEventListener('click', e => {
-  const header = e.target.closest('.cat-row-header');
-  if(!header) return;
-  header.closest('.cat-row').classList.toggle('expanded');
+document.getElementById('faturamentoChartAnual').addEventListener('click', e => {
+  const col = e.target.closest('.chart-bar-col');
+  if(!col) return;
+  document.querySelectorAll('#relatorioTabs .tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('#relatorioTabs .tab[data-relview="mensal"]').classList.add('active');
+  relatorioView = 'mensal';
+  document.getElementById('relatorioMensalView').style.display = '';
+  document.getElementById('relatorioAnualView').style.display = 'none';
+  setRelatorioYm(col.dataset.ym);
 });
 
 // ================= LEMBRETES =================
