@@ -726,6 +726,10 @@
           <input type="number" id="pComissaoMarketplace" step="0.01" min="0" max="100" placeholder="18">
         </div>
       </div>
+      <div class="field" id="pFreteWrap" style="display:none;">
+        <label>Frete (%)</label>
+        <input type="number" id="pFreteMarketplace" step="0.01" min="0" max="100" placeholder="6">
+      </div>
       <div class="field-row">
         <div class="field">
           <label>Comissão afiliado (%)</label>
@@ -753,15 +757,9 @@
         <button type="button" class="btn btn-outline btn-sm" id="btnAddOutroCusto">+ Adicionar custo</button>
       </div>
 
-      <div class="field-row">
-        <div class="field">
-          <label>Meta de lucro (%)</label>
-          <input type="number" id="pLucroDesejado" step="0.01" min="0" max="99" placeholder="10">
-        </div>
-        <div class="field">
-          <label>Preço de venda (R$)</label>
-          <input type="number" id="pPrecoVenda" step="0.01" min="0" placeholder="0,00">
-        </div>
+      <div class="field">
+        <label>Meta de lucro (%)</label>
+        <input type="number" id="pLucroDesejado" step="0.01" min="0" max="99" placeholder="10">
       </div>
 
       <div class="produto-preview">
@@ -770,6 +768,18 @@
             <div class="label">Preço recomendado</div>
             <div class="card-value" id="prodPrecoRecomendado">R$ 0,00</div>
           </div>
+        </div>
+        <div class="produto-preview-aviso" id="prodAviso" style="display:none;"></div>
+        <button type="button" class="btn btn-outline btn-sm" id="btnUsarRecomendado" style="margin-top:14px;">Usar preço recomendado</button>
+      </div>
+
+      <div class="field">
+        <label>Preço de venda (R$)</label>
+        <input type="number" id="pPrecoVenda" step="0.01" min="0" placeholder="0,00">
+      </div>
+
+      <div class="produto-preview">
+        <div class="summary-grid">
           <div class="summary-card">
             <div class="label">Margem de contribuição</div>
             <div class="card-value" id="prodMargem">0%</div>
@@ -779,8 +789,6 @@
             <div class="card-value" id="prodLucro">R$ 0,00</div>
           </div>
         </div>
-        <div class="produto-preview-aviso" id="prodAviso" style="display:none;"></div>
-        <button type="button" class="btn btn-outline btn-sm" id="btnUsarRecomendado" style="margin-top:14px;">Usar preço recomendado</button>
       </div>
 
       <div class="modal-actions">
@@ -1459,7 +1467,7 @@ function custoFixoTotalProduto(p){
 }
 
 function percentualDescontosProduto(p){
-  return (p.comissaoMarketplace||0) + (p.comissaoAfiliado||0) + (p.imposto||0);
+  return (p.comissaoMarketplace||0) + (p.comissaoAfiliado||0) + (p.imposto||0) + (p.freteMarketplace||0);
 }
 
 // Fórmula de markup reverso: comissões, imposto e meta de lucro são % sobre o
@@ -1504,7 +1512,7 @@ function renderProdutos(){
         <div class="produto-top">
           <div>
             <div class="produto-nome">${escapeHtml(p.nome)} ${marketplaceLabel(p.marketplace) ? `<span class="badge ${marketplaceBadgeClass(p.marketplace)}">${marketplaceLabel(p.marketplace)}</span>` : ''}</div>
-            <div class="produto-meta">Custo fixo total: ${fmt(custoFixoTotalProduto(p))} · Comissões + imposto: ${percentualDescontosProduto(p)}%</div>
+            <div class="produto-meta">Custo fixo total: ${fmt(custoFixoTotalProduto(p))} · Descontos (%): ${percentualDescontosProduto(p)}%</div>
           </div>
           <div class="item-actions">
             <button class="btn btn-outline btn-sm" data-action="ajustar-taxas" data-id="${p.id}">Ajustar taxas</button>
@@ -1554,6 +1562,10 @@ function renderProdutos(){
               <input type="number" id="${pt}ComissaoMarketplace" step="0.01" min="0" max="100" value="${p.comissaoMarketplace ?? ''}">
             </div>
           </div>
+          <div class="field" id="${pt}FreteWrap" style="${mktSelecionado === 'tiktok' ? '' : 'display:none;'}">
+            <label>Frete (%)</label>
+            <input type="number" id="${pt}FreteMarketplace" step="0.01" min="0" max="100" value="${p.freteMarketplace ?? 0}">
+          </div>
           <div class="item-actions">
             <button class="btn btn-primary btn-sm" data-action="salvar-taxas" data-id="${p.id}">Salvar</button>
             <button class="btn btn-outline btn-sm" data-action="cancelar-taxas" data-id="${p.id}">Cancelar</button>
@@ -1590,6 +1602,7 @@ document.getElementById('produtosList').addEventListener('click', e => {
     produto.marketplace = marketplace;
     produto.taxaFixaMarketplace = parseFloat(document.getElementById(pt + 'TaxaFixa').value) || 0;
     produto.comissaoMarketplace = parseFloat(document.getElementById(pt + 'ComissaoMarketplace').value) || 0;
+    produto.freteMarketplace = parseFloat(document.getElementById(pt + 'FreteMarketplace').value) || 0;
     saveProdutos();
     produtoTaxasAbertoId = null;
     renderProdutos();
@@ -1604,6 +1617,7 @@ document.getElementById('produtosList').addEventListener('change', e => {
   const id = select.id.slice(2, -'Marketplace'.length);
   const prefix = 'pt' + id;
   const valor = select.value;
+  document.getElementById(prefix + 'FreteWrap').style.display = valor === 'tiktok' ? '' : 'none';
   if(!valor) return;
   if(valor === 'tiktok'){
     const produto = produtos.find(p => p.id === id);
@@ -1640,7 +1654,11 @@ function lerOutrosCustosDoForm(containerId){
 // e pela calculadora rápida (prefixo "q") — os dois formulários usam os mesmos
 // sufixos de id, só muda o prefixo e o container de "outros custos".
 function lerCampos(prefix, outrosContainerId){
-  const num = suffix => parseFloat(document.getElementById(prefix + suffix).value) || 0;
+  // O campo de frete só existe no painel do TikTok — resolve pra 0 nos demais.
+  const num = suffix => {
+    const el = document.getElementById(prefix + suffix);
+    return el ? (parseFloat(el.value) || 0) : 0;
+  };
   return {
     custoProduto: num('CustoProduto'),
     custoFixoOperacao: num('CustoFixoOperacao'),
@@ -1648,6 +1666,7 @@ function lerCampos(prefix, outrosContainerId){
     comissaoMarketplace: num('ComissaoMarketplace'),
     comissaoAfiliado: num('ComissaoAfiliado'),
     imposto: num('Imposto'),
+    freteMarketplace: num('FreteMarketplace'),
     custoEmbalagem: num('CustoEmbalagem'),
     custoAds: num('CustoAds'),
     outrosCustos: lerOutrosCustosDoForm(outrosContainerId),
@@ -1672,7 +1691,14 @@ function ajustarFaixaTiktokModal(){
   aplicarPreset('p', faixaTiktokPeloPreco(preco));
 }
 
+// O frete (%) só se aplica ao TikTok (cliente específico que paga frete à parte
+// da comissão) — o campo fica escondido pros outros marketplaces.
+function atualizarVisibilidadeFreteModal(){
+  document.getElementById('pFreteWrap').style.display = document.getElementById('pMarketplace').value === 'tiktok' ? '' : 'none';
+}
+
 document.getElementById('pMarketplace').addEventListener('change', e => {
+  atualizarVisibilidadeFreteModal();
   if(e.target.value){
     if(e.target.value === 'tiktok'){
       ajustarFaixaTiktokModal();
@@ -1727,7 +1753,7 @@ document.getElementById('outrosCustosList').addEventListener('click', e => {
 document.getElementById('outrosCustosList').addEventListener('input', atualizarPreviewProduto);
 document.getElementById('btnAddOutroCusto').addEventListener('click', () => addOutroCustoRow('outrosCustosList'));
 
-['pCustoProduto','pCustoFixoOperacao','pTaxaFixa','pComissaoMarketplace','pComissaoAfiliado','pImposto','pCustoEmbalagem','pCustoAds','pLucroDesejado']
+['pCustoProduto','pCustoFixoOperacao','pTaxaFixa','pComissaoMarketplace','pFreteMarketplace','pComissaoAfiliado','pImposto','pCustoEmbalagem','pCustoAds','pLucroDesejado']
   .forEach(id => document.getElementById(id).addEventListener('input', atualizarPreviewProduto));
 
 document.getElementById('pPrecoVenda').addEventListener('input', () => {
@@ -1753,10 +1779,12 @@ function openModalProduto(produto = null){
   document.getElementById('pNome').value = produto ? produto.nome : '';
   const mktSalvo = produto ? (produto.marketplace || '') : '';
   document.getElementById('pMarketplace').value = mktSalvo.startsWith('tiktok') ? 'tiktok' : mktSalvo;
+  atualizarVisibilidadeFreteModal();
   document.getElementById('pCustoProduto').value = produto ? produto.custoProduto : '';
   document.getElementById('pCustoFixoOperacao').value = produto ? produto.custoFixoOperacao : custoFixoPorPedido().toFixed(2);
   document.getElementById('pTaxaFixa').value = produto ? produto.taxaFixaMarketplace : '';
   document.getElementById('pComissaoMarketplace').value = produto ? produto.comissaoMarketplace : '';
+  document.getElementById('pFreteMarketplace').value = produto ? (produto.freteMarketplace || 0) : 0;
   document.getElementById('pComissaoAfiliado').value = produto ? produto.comissaoAfiliado : 0;
   document.getElementById('pImposto').value = produto ? produto.imposto : '';
   document.getElementById('pCustoEmbalagem').value = produto ? produto.custoEmbalagem : '';
@@ -1785,12 +1813,14 @@ function closeModalProduto(){
 // quanto pelo seletor de marketplace no cadastro de produto salvo, pra nunca
 // divergir entre as duas. TikTok tem duas faixas porque a comissão muda conforme
 // o preço do produto (abaixo/acima de R$50).
+// TikTok também cobra frete (%) separado da comissão — cliente específico, então
+// vem como campo à parte em vez de já embutido na comissão marketplace.
 const MARKETPLACE_PRESETS = [
   { id: 'shopee',          label: 'Shopee',                              taxaFixa: 4,    comissaoMarketplace: 18 },
   { id: 'ml',               label: 'Mercado Livre',                       taxaFixa: 6.75, comissaoMarketplace: 19 },
   { id: 'shein',            label: 'Shein',                               taxaFixa: 5,    comissaoMarketplace: 18 },
-  { id: 'tiktok_ate50',     label: 'TikTok Shop',                        taxaFixa: 4,    comissaoMarketplace: 16 },
-  { id: 'tiktok_acima50',   label: 'TikTok Shop',                        taxaFixa: 6,    comissaoMarketplace: 12 }
+  { id: 'tiktok_ate50',     label: 'TikTok Shop',                        taxaFixa: 4,    comissaoMarketplace: 10, freteMarketplace: 6 },
+  { id: 'tiktok_acima50',   label: 'TikTok Shop',                        taxaFixa: 6,    comissaoMarketplace: 6,  freteMarketplace: 6 }
 ];
 
 function aplicarPreset(prefix, presetId){
@@ -1798,6 +1828,8 @@ function aplicarPreset(prefix, presetId){
   if(!preset) return;
   document.getElementById(prefix + 'TaxaFixa').value = preset.taxaFixa;
   document.getElementById(prefix + 'ComissaoMarketplace').value = preset.comissaoMarketplace;
+  const freteEl = document.getElementById(prefix + 'FreteMarketplace');
+  if(freteEl) freteEl.value = preset.freteMarketplace || 0;
 }
 
 function marketplaceLabel(presetId){
@@ -1850,6 +1882,12 @@ function gerarPainelQuickCalc(prefix, ehTiktok){
         <input type="number" id="${prefix}ComissaoMarketplace" step="0.01" min="0" max="100" placeholder="0">
       </div>
     </div>
+    ${ehTiktok ? `
+    <div class="field">
+      <label>Frete (%)</label>
+      <input type="number" id="${prefix}FreteMarketplace" step="0.01" min="0" max="100" placeholder="6">
+    </div>
+    ` : ''}
     <div class="field-row">
       <div class="field">
         <label>Comissão afiliado (%)</label>
@@ -1877,15 +1915,9 @@ function gerarPainelQuickCalc(prefix, ehTiktok){
       <button type="button" class="btn btn-outline btn-sm" data-action="add-outro-custo">+ Adicionar custo</button>
     </div>
 
-    <div class="field-row">
-      <div class="field">
-        <label>Meta de lucro (%)</label>
-        <input type="number" id="${prefix}LucroDesejado" step="0.01" min="0" max="99" placeholder="10">
-      </div>
-      <div class="field">
-        <label>Preço de venda (R$)</label>
-        <input type="number" id="${prefix}PrecoVenda" step="0.01" min="0" placeholder="0,00">
-      </div>
+    <div class="field">
+      <label>Meta de lucro (%)</label>
+      <input type="number" id="${prefix}LucroDesejado" step="0.01" min="0" max="99" placeholder="10">
     </div>
 
     <div class="produto-preview">
@@ -1894,6 +1926,18 @@ function gerarPainelQuickCalc(prefix, ehTiktok){
           <div class="label">Preço recomendado</div>
           <div class="card-value" id="${prefix}PrecoRecomendado">R$ 0,00</div>
         </div>
+      </div>
+      <div class="produto-preview-aviso" id="${prefix}Aviso" style="display:none;"></div>
+      <button type="button" class="btn btn-outline btn-sm" data-action="usar-recomendado" style="margin-top:14px;">Usar preço recomendado</button>
+    </div>
+
+    <div class="field">
+      <label>Preço de venda (R$)</label>
+      <input type="number" id="${prefix}PrecoVenda" step="0.01" min="0" placeholder="0,00">
+    </div>
+
+    <div class="produto-preview">
+      <div class="summary-grid">
         <div class="summary-card">
           <div class="label">Margem de contribuição</div>
           <div class="card-value" id="${prefix}Margem">0%</div>
@@ -1903,8 +1947,6 @@ function gerarPainelQuickCalc(prefix, ehTiktok){
           <div class="card-value" id="${prefix}Lucro">R$ 0,00</div>
         </div>
       </div>
-      <div class="produto-preview-aviso" id="${prefix}Aviso" style="display:none;"></div>
-      <button type="button" class="btn btn-outline btn-sm" data-action="usar-recomendado" style="margin-top:14px;">Usar preço recomendado</button>
     </div>
   `;
 }
