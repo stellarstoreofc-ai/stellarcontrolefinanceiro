@@ -7,6 +7,9 @@ Ferramenta para controlar contas a pagar, despesas, faturamento e lembretes de p
 1. No painel do Supabase do projeto, abra **SQL Editor** e rode o script `supabase-setup.sql` (cria a tabela `financeiro_dados` e as regras de acesso).
 2. Abra `index.html` no navegador, clique em **"Criar conta"** e cadastre seu email/senha de acesso.
 3. Se o Supabase pedir confirmação por email, confirme pelo link recebido antes de tentar entrar (ou desative essa exigência em Authentication → Providers → Email → "Confirm email", se preferir acesso mais rápido para uso interno).
+4. Em Authentication → URL Configuration, confira se o **Site URL** e as **Redirect URLs** apontam pro endereço onde o app está publicado (ex: `https://nexuscontrols.vercel.app`) — sem isso, os links de confirmação de email e de "Esqueci minha senha" não funcionam direito.
+
+Esqueceu a senha? Na tela de login tem um link **"Esqueci minha senha"** — digite o email cadastrado e clique nele; o link do email recebido já leva pra tela de definir uma nova senha (não precisa mexer no painel do Supabase pra isso).
 
 ## Uso
 
