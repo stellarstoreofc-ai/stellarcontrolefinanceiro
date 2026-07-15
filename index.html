@@ -244,8 +244,6 @@
   .produto-preview .card-value.valor-negativo{color:var(--red);}
   .produto-preview-aviso{color:var(--red);font-size:12.5px;font-weight:700;margin-top:10px;}
 
-  .campo-valor-calc{font-size:12px;color:var(--muted);margin-top:6px;}
-
   .foto-upload-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
   .foto-preview{
     width:68px;height:68px;border-radius:12px;overflow:hidden;flex-shrink:0;
@@ -641,6 +639,32 @@
       <!-- PÁGINA: PRECIFICAÇÃO DE PRODUTOS -->
       <section class="page" id="page-precificacao">
         <div class="chart-card" style="max-width:520px;">
+          <h3>Configurações padrão da precificação</h3>
+          <p style="font-size:12px;color:var(--muted);margin:0 0 14px;">Preencha uma vez os custos que já são fixos na sua empresa — a calculadora rápida e os produtos novos já vêm com esses valores preenchidos.</p>
+          <div class="field-row">
+            <div class="field">
+              <label>Imposto (%)</label>
+              <input type="number" id="cfgImposto" step="0.01" min="0" max="100" placeholder="Ex: 4">
+            </div>
+            <div class="field">
+              <label>Custo de embalagem (R$)</label>
+              <input type="number" id="cfgCustoEmbalagem" step="0.01" min="0" placeholder="0,00">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Custo fixo da operação (R$)</label>
+              <input type="number" id="cfgCustoFixo" step="0.01" min="0" placeholder="0,00">
+              <button type="button" class="btn btn-outline btn-sm" id="btnPuxarCustoFixoConfig" style="margin-top:8px;">↻ Usar custo fixo calculado</button>
+            </div>
+            <div class="field">
+              <label>Comissão do afiliado (%)</label>
+              <input type="number" id="cfgComissaoAfiliado" step="0.01" min="0" max="100" placeholder="Ex: 10">
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card" style="max-width:520px;">
           <h3>Calculadora rápida por marketplace (não salva produto)</h3>
           <div class="tabs" id="quickMarketplaceTabs">
             <button class="tab active" data-mkt="shopee">Shopee</button>
@@ -782,16 +806,9 @@
         <input type="number" id="pCustoProduto" step="0.01" min="0" placeholder="0,00">
       </div>
 
-      <div class="field-row">
-        <div class="field">
-          <label>Comissão do afiliado (%)</label>
-          <input type="number" id="pComissaoAfiliado" step="0.01" min="0" max="100" placeholder="10">
-          <div class="campo-valor-calc">Valor: <span id="pComissaoAfiliadoValor">R$ 0,00</span></div>
-        </div>
-        <div class="field">
-          <label>Custo de ads (R$)</label>
-          <input type="number" id="pCustoAds" step="0.01" min="0" placeholder="0,00">
-        </div>
+      <div class="field">
+        <label>Custo de ads (R$)</label>
+        <input type="number" id="pCustoAds" step="0.01" min="0" placeholder="0,00">
       </div>
 
       <div class="field">
@@ -827,34 +844,18 @@
       <details class="config-taxas">
         <summary>Configurar taxas do marketplace</summary>
         <div class="config-taxas-body">
-          <div class="field-row">
-            <div class="field">
-              <label>Custo fixo da operação (R$)</label>
-              <input type="number" id="pCustoFixoOperacao" step="0.01" min="0" placeholder="0,00">
-            </div>
-            <div class="field">
-              <label>Taxa fixa marketplace (R$)</label>
-              <input type="number" id="pTaxaFixa" step="0.01" min="0" placeholder="4,00">
-            </div>
+          <div class="field">
+            <label>Taxa fixa marketplace (R$)</label>
+            <input type="number" id="pTaxaFixa" step="0.01" min="0" placeholder="4,00">
           </div>
           <div id="pMlConfigWrap" style="display:none;"></div>
-          <div class="field-row">
-            <div class="field">
-              <label>Comissão marketplace (%)</label>
-              <input type="number" id="pComissaoMarketplace" step="0.01" min="0" max="100" placeholder="18">
-            </div>
-            <div class="field">
-              <label>Imposto (%)</label>
-              <input type="number" id="pImposto" step="0.01" min="0" max="100" placeholder="Ex: 4">
-            </div>
+          <div class="field">
+            <label>Comissão marketplace (%)</label>
+            <input type="number" id="pComissaoMarketplace" step="0.01" min="0" max="100" placeholder="18">
           </div>
           <div class="field" id="pFreteWrap" style="display:none;">
             <label>Frete (%)</label>
             <input type="number" id="pFreteMarketplace" step="0.01" min="0" max="100" placeholder="6">
-          </div>
-          <div class="field">
-            <label>Custo de embalagem (R$)</label>
-            <input type="number" id="pCustoEmbalagem" step="0.01" min="0" placeholder="0,00">
           </div>
           <div class="field">
             <label>Outros custos</label>
@@ -886,6 +887,10 @@ let lembretes = [];
 let lembretesStatus = {};
 let custoFixoConfig = { custoFixo: 0, pedidos: 0 };
 let produtos = [];
+// Custos que a empresa já sabe de antemão (imposto, embalagem, custo fixo e
+// comissão de afiliado) — preenchidos uma vez e usados direto por toda
+// calculadora/produto, sem campo próprio duplicado em cada marketplace.
+let configPrecificacao = { imposto: 4, custoEmbalagem: 0, custoFixo: 0, comissaoAfiliado: 10 };
 
 function uid(){ return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()); }
 
@@ -916,6 +921,7 @@ async function persist(){
     lembretes_status: lembretesStatus,
     custo_fixo: custoFixoConfig,
     produtos: produtos,
+    config_precificacao: configPrecificacao,
     updated_at: new Date().toISOString()
   });
   setSyncStatus(error ? 'error' : 'ok');
@@ -928,6 +934,7 @@ function saveLembretes(){ persist(); }
 function saveLembretesStatus(){ persist(); }
 function saveCustoFixoConfig(){ persist(); }
 function saveProdutos(){ persist(); }
+function saveConfigPrecificacao(){ persist(); }
 
 async function carregarDados(userId){
   const { data: row, error } = await sb.from('financeiro_dados').select('*').eq('user_id', userId).maybeSingle();
@@ -942,8 +949,9 @@ async function carregarDados(userId){
     lembretesStatus = {};
     custoFixoConfig = { custoFixo: 0, pedidos: 0 };
     produtos = [];
+    configPrecificacao = { imposto: 4, custoEmbalagem: 0, custoFixo: 0, comissaoAfiliado: 10 };
     await sb.from('financeiro_dados').insert({
-      user_id: userId, contas: data, faturamento: faturamento, lembretes: lembretes, lembretes_status: lembretesStatus, custo_fixo: custoFixoConfig, produtos: produtos
+      user_id: userId, contas: data, faturamento: faturamento, lembretes: lembretes, lembretes_status: lembretesStatus, custo_fixo: custoFixoConfig, produtos: produtos, config_precificacao: configPrecificacao
     });
   } else {
     data = row.contas || [];
@@ -952,6 +960,9 @@ async function carregarDados(userId){
     lembretesStatus = row.lembretes_status || {};
     custoFixoConfig = row.custo_fixo && typeof row.custo_fixo === 'object' ? row.custo_fixo : { custoFixo: 0, pedidos: 0 };
     produtos = row.produtos || [];
+    configPrecificacao = row.config_precificacao && typeof row.config_precificacao === 'object'
+      ? row.config_precificacao
+      : { imposto: 4, custoEmbalagem: 0, custoFixo: 0, comissaoAfiliado: 10 };
   }
 }
 
@@ -1004,7 +1015,7 @@ function showPage(name){
   else if(name === 'relatorio'){ renderRelatorio(); if(relatorioView === 'anual') renderRelatorioAnual(); }
   else if(name === 'lembretes') renderLembretes();
   else if(name === 'custofixo') renderCustoFixo();
-  else if(name === 'precificacao') renderProdutos();
+  else if(name === 'precificacao'){ renderConfigPrecificacao(); renderProdutos(); }
 }
 
 // ================= CONTAS =================
@@ -1527,13 +1538,16 @@ function custoFixoPorPedido(){
   return custoFixoConfig.pedidos > 0 ? custoFixoConfig.custoFixo / custoFixoConfig.pedidos : 0;
 }
 
+// Custo fixo da operação e custo de embalagem não são mais digitados por
+// marketplace/produto — vêm direto de configPrecificacao (configurado uma vez
+// no topo da página), pra nunca divergir nem sumir ao trocar de marketplace.
 function custoFixoTotalProduto(p){
   const outros = (p.outrosCustos || []).reduce((s,o) => s + (o.valor || 0), 0);
-  return (p.custoProduto||0) + (p.custoFixoOperacao||0) + (p.taxaFixaMarketplace||0) + (p.custoEmbalagem||0) + (p.custoAds||0) + outros;
+  return (p.custoProduto||0) + (configPrecificacao.custoFixo||0) + (p.taxaFixaMarketplace||0) + (configPrecificacao.custoEmbalagem||0) + (p.custoAds||0) + outros;
 }
 
 function percentualDescontosProduto(p){
-  return (p.comissaoMarketplace||0) + (p.comissaoAfiliado||0) + (p.imposto||0) + (p.freteMarketplace||0);
+  return (p.comissaoMarketplace||0) + (configPrecificacao.comissaoAfiliado||0) + (configPrecificacao.imposto||0) + (p.freteMarketplace||0);
 }
 
 // Fórmula de markup reverso: comissões, imposto e meta de lucro são % sobre o
@@ -1806,19 +1820,17 @@ function lerOutrosCustosDoForm(containerId){
 // sufixos de id, só muda o prefixo e o container de "outros custos".
 function lerCampos(prefix, outrosContainerId){
   // O campo de frete só existe no painel do TikTok — resolve pra 0 nos demais.
+  // custoFixoOperacao/imposto/custoEmbalagem/comissaoAfiliado não são mais lidos
+  // daqui — vêm direto de configPrecificacao (globais, sem campo por marketplace).
   const num = suffix => {
     const el = document.getElementById(prefix + suffix);
     return el ? (parseFloat(el.value) || 0) : 0;
   };
   return {
     custoProduto: num('CustoProduto'),
-    custoFixoOperacao: num('CustoFixoOperacao'),
     taxaFixaMarketplace: num('TaxaFixa'),
     comissaoMarketplace: num('ComissaoMarketplace'),
-    comissaoAfiliado: num('ComissaoAfiliado'),
-    imposto: num('Imposto'),
     freteMarketplace: num('FreteMarketplace'),
-    custoEmbalagem: num('CustoEmbalagem'),
     custoAds: num('CustoAds'),
     outrosCustos: lerOutrosCustosDoForm(outrosContainerId),
     lucroDesejado: num('LucroDesejado'),
@@ -1892,15 +1904,6 @@ function atualizarPreview(campos, prefixoSaida){
   marcarValorNegativo(elPreco, preco === null);
   marcarValorNegativo(elLucro, lucro < 0);
 
-  // Comissão do afiliado é cobrada em %, mas mostrar o valor em R$ ajuda quem
-  // não quer fazer a conta de cabeça — usa o preço de venda já digitado, ou
-  // o recomendado como referência enquanto o preço de venda ainda está vazio.
-  const elComissaoAfiliadoValor = document.getElementById(prefixoSaida + 'ComissaoAfiliadoValor');
-  if(elComissaoAfiliadoValor){
-    const precoRef = campos.precoVenda > 0 ? campos.precoVenda : (preco || 0);
-    elComissaoAfiliadoValor.textContent = fmt(precoRef * (campos.comissaoAfiliado || 0) / 100);
-  }
-
   const aviso = document.getElementById(prefixoSaida + 'Aviso');
   if(preco === null){
     aviso.style.display = 'block';
@@ -1923,7 +1926,7 @@ document.getElementById('outrosCustosList').addEventListener('click', e => {
 document.getElementById('outrosCustosList').addEventListener('input', atualizarPreviewProduto);
 document.getElementById('btnAddOutroCusto').addEventListener('click', () => addOutroCustoRow('outrosCustosList'));
 
-['pCustoProduto','pCustoFixoOperacao','pTaxaFixa','pComissaoMarketplace','pFreteMarketplace','pComissaoAfiliado','pImposto','pCustoEmbalagem','pCustoAds','pLucroDesejado']
+['pCustoProduto','pTaxaFixa','pComissaoMarketplace','pFreteMarketplace','pCustoAds','pLucroDesejado']
   .forEach(id => document.getElementById(id).addEventListener('input', atualizarPreviewProduto));
 
 document.getElementById('pPrecoVenda').addEventListener('input', () => {
@@ -1954,14 +1957,10 @@ function openModalProduto(produto = null){
   atualizarVisibilidadeFreteModal();
   atualizarVisibilidadeMlModal();
   document.getElementById('pCustoProduto').value = produto ? produto.custoProduto : '';
-  document.getElementById('pCustoFixoOperacao').value = produto ? produto.custoFixoOperacao : custoFixoPorPedido().toFixed(2);
   document.getElementById('pTaxaFixa').value = produto ? produto.taxaFixaMarketplace : '';
   document.getElementById('pComissaoMarketplace').value = produto ? produto.comissaoMarketplace : '';
   document.getElementById('pFreteMarketplace').value = produto ? (produto.freteMarketplace || 0) : 0;
   marcarSubtabsAtivas('p');
-  document.getElementById('pComissaoAfiliado').value = produto ? produto.comissaoAfiliado : 0;
-  document.getElementById('pImposto').value = produto ? produto.imposto : '';
-  document.getElementById('pCustoEmbalagem').value = produto ? produto.custoEmbalagem : '';
   document.getElementById('pCustoAds').value = produto ? produto.custoAds : '';
   document.getElementById('pLucroDesejado').value = produto ? produto.lucroDesejado : 10;
   document.getElementById('pPrecoVenda').value = produto ? produto.precoVenda : '';
@@ -2091,16 +2090,9 @@ function gerarPainelQuickCalc(prefix, ehTiktok, ehMl){
       <input type="number" id="${prefix}CustoProduto" step="0.01" min="0" placeholder="0,00">
     </div>
 
-    <div class="field-row">
-      <div class="field">
-        <label>Comissão do afiliado (%)</label>
-        <input type="number" id="${prefix}ComissaoAfiliado" step="0.01" min="0" max="100" placeholder="0">
-        <div class="campo-valor-calc">Valor: <span id="${prefix}ComissaoAfiliadoValor">R$ 0,00</span></div>
-      </div>
-      <div class="field">
-        <label>Custo de ads (R$)</label>
-        <input type="number" id="${prefix}CustoAds" step="0.01" min="0" placeholder="0,00">
-      </div>
+    <div class="field">
+      <label>Custo de ads (R$)</label>
+      <input type="number" id="${prefix}CustoAds" step="0.01" min="0" placeholder="0,00">
     </div>
 
     <div class="field">
@@ -2136,28 +2128,15 @@ function gerarPainelQuickCalc(prefix, ehTiktok, ehMl){
     <details class="config-taxas">
       <summary>Configurar taxas do marketplace</summary>
       <div class="config-taxas-body">
-        <div class="field-row">
-          <div class="field">
-            <label>Custo fixo da operação (R$)</label>
-            <input type="number" id="${prefix}CustoFixoOperacao" step="0.01" min="0" placeholder="0,00">
-          </div>
-          <div class="field">
-            <label>Taxa fixa marketplace (R$)</label>
-            <input type="number" id="${prefix}TaxaFixa" step="0.01" min="0" placeholder="0,00">
-          </div>
+        <div class="field">
+          <label>Taxa fixa marketplace (R$)</label>
+          <input type="number" id="${prefix}TaxaFixa" step="0.01" min="0" placeholder="0,00">
         </div>
-        <button type="button" class="btn btn-outline btn-sm" data-action="puxar-custo-fixo">↻ Usar custo fixo calculado</button>
 
         ${ehMl ? gerarSubtabsMl(prefix) : ''}
-        <div class="field-row" style="margin-top:14px;">
-          <div class="field">
-            <label>Comissão marketplace (%)</label>
-            <input type="number" id="${prefix}ComissaoMarketplace" step="0.01" min="0" max="100" placeholder="0">
-          </div>
-          <div class="field">
-            <label>Imposto (%)</label>
-            <input type="number" id="${prefix}Imposto" step="0.01" min="0" max="100" placeholder="Ex: 4">
-          </div>
+        <div class="field">
+          <label>Comissão marketplace (%)</label>
+          <input type="number" id="${prefix}ComissaoMarketplace" step="0.01" min="0" max="100" placeholder="0">
         </div>
         ${ehTiktok ? `
         <div class="field">
@@ -2165,10 +2144,6 @@ function gerarPainelQuickCalc(prefix, ehTiktok, ehMl){
           <input type="number" id="${prefix}FreteMarketplace" step="0.01" min="0" max="100" placeholder="6">
         </div>
         ` : ''}
-        <div class="field">
-          <label>Custo de embalagem (R$)</label>
-          <input type="number" id="${prefix}CustoEmbalagem" step="0.01" min="0" placeholder="0,00">
-        </div>
         <div class="field">
           <label>Outros custos</label>
           <div id="${prefix}OutrosCustosList"></div>
@@ -2224,9 +2199,6 @@ function initQuickCalcPanels(){
 
     if(btn.dataset.action === 'add-outro-custo'){
       addOutroCustoRow(outrosContainerId);
-    } else if(btn.dataset.action === 'puxar-custo-fixo'){
-      document.getElementById(prefix + 'CustoFixoOperacao').value = custoFixoPorPedido().toFixed(2);
-      atualizarPreview(lerCampos(prefix, outrosContainerId), prefix);
     } else if(btn.dataset.action === 'usar-recomendado'){
       let campos = lerCampos(prefix, outrosContainerId);
       const preco = precoRecomendadoProduto(campos);
@@ -2256,14 +2228,47 @@ document.getElementById('quickMarketplaceTabs').addEventListener('click', e => {
 
 function initQuickCalcDefaults(){
   MARKETPLACES_QUICK.forEach(m => {
-    document.getElementById(m.prefix + 'CustoFixoOperacao').value = custoFixoPorPedido().toFixed(2);
     aplicarPreset(m.prefix, m.preset);
-    document.getElementById(m.prefix + 'ComissaoAfiliado').value = 0;
-    document.getElementById(m.prefix + 'Imposto').value = 4;
     document.getElementById(m.prefix + 'LucroDesejado').value = 10;
     atualizarPreview(lerCampos(m.prefix, m.prefix + 'OutrosCustosList'), m.prefix);
   });
 }
+
+function renderConfigPrecificacao(){
+  document.getElementById('cfgImposto').value = configPrecificacao.imposto;
+  document.getElementById('cfgCustoEmbalagem').value = configPrecificacao.custoEmbalagem;
+  document.getElementById('cfgCustoFixo').value = configPrecificacao.custoFixo;
+  document.getElementById('cfgComissaoAfiliado').value = configPrecificacao.comissaoAfiliado;
+}
+
+// Imposto/custo de embalagem/custo fixo/comissão do afiliado não têm campo
+// próprio por marketplace — custoFixoTotalProduto/percentualDescontosProduto
+// já leem configPrecificacao direto. Só falta recalcular a prévia (preço
+// recomendado/lucro) de cada painel pra refletir o novo valor global.
+function aplicarConfigPrecificacaoQuickCalc(){
+  MARKETPLACES_QUICK.forEach(m => {
+    atualizarPreview(lerCampos(m.prefix, m.prefix + 'OutrosCustosList'), m.prefix);
+  });
+}
+
+function salvarConfigPrecificacaoDoForm(){
+  configPrecificacao = {
+    imposto: parseFloat(document.getElementById('cfgImposto').value) || 0,
+    custoEmbalagem: parseFloat(document.getElementById('cfgCustoEmbalagem').value) || 0,
+    custoFixo: parseFloat(document.getElementById('cfgCustoFixo').value) || 0,
+    comissaoAfiliado: parseFloat(document.getElementById('cfgComissaoAfiliado').value) || 0
+  };
+  saveConfigPrecificacao();
+  aplicarConfigPrecificacaoQuickCalc();
+}
+
+['cfgImposto','cfgCustoEmbalagem','cfgCustoFixo','cfgComissaoAfiliado']
+  .forEach(id => document.getElementById(id).addEventListener('change', salvarConfigPrecificacaoDoForm));
+
+document.getElementById('btnPuxarCustoFixoConfig').addEventListener('click', () => {
+  document.getElementById('cfgCustoFixo').value = custoFixoPorPedido().toFixed(2);
+  salvarConfigPrecificacaoDoForm();
+});
 
 document.getElementById('btnNovoProduto').addEventListener('click', () => openModalProduto());
 document.getElementById('btnCancelarProduto').addEventListener('click', closeModalProduto);
@@ -2288,13 +2293,14 @@ formProduto.addEventListener('submit', e => {
 // ================= BACKUP / RESTAURAR =================
 document.getElementById('btnExport').addEventListener('click', () => {
   const backup = {
-    version: 4,
+    version: 5,
     contas: data,
     faturamento: faturamento,
     lembretes: lembretes,
     lembretesStatus: lembretesStatus,
     custoFixoConfig: custoFixoConfig,
-    produtos: produtos
+    produtos: produtos,
+    configPrecificacao: configPrecificacao
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -2327,6 +2333,7 @@ document.getElementById('fileInput').addEventListener('change', e => {
           lembretesStatus = imported.lembretesStatus || {};
           custoFixoConfig = imported.custoFixoConfig || custoFixoConfig;
           produtos = imported.produtos || produtos;
+          configPrecificacao = imported.configPrecificacao || configPrecificacao;
           persist();
         }
       } else {
