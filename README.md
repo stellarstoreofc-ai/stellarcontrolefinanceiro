@@ -10,19 +10,21 @@ Ferramenta para controlar contas a pagar, despesas, faturamento e lembretes de p
 
 ## Uso
 
-Abra `index.html` diretamente no navegador (local) ou acesse a URL do Netlify depois do deploy. Não precisa de servidor nem build.
+Acesse **https://nexuscontrols.vercel.app** de qualquer computador, ou abra `index.html` diretamente no navegador (local). Não precisa de servidor nem build.
 
 ## Funcionalidades
 
-- **Contas**: cadastro de despesas/receitas com descrição, valor, vencimento, categoria e status. Painel com totais (a pagar, vencidas, pago no mês, saldo), filtros e busca.
-- **Relatório mensal**: faturamento do mês (lançado manualmente), quanto entrou, quanto saiu e saldo — com gráfico comparando o faturamento dos últimos 12 meses.
-- **Despesas por categoria**: total, percentual e quebra pago/pendente por categoria, com lista detalhada expansível.
+Menu lateral, na ordem em que aparece:
+
+- **Relatório mensal**: faturamento do mês (lançado manualmente), quanto entrou, quanto saiu e saldo. Tem duas abas — **Mensal** (com gráfico dos últimos 12 meses corridos) e **Anual** (soma o ano inteiro, navega por ano, e mostra um gráfico Jan-Dez daquele ano; clicar numa barra leva direto pro mês correspondente na aba Mensal).
 - **Lembretes**: checklist mensal de pagamentos recorrentes (vem pré-cadastrado com contabilidade, ERP, imposto e INSS — dá pra editar, excluir ou adicionar outros), que reseta automaticamente a cada mês.
+- **Contas**: cadastro de despesas/receitas com descrição, valor, vencimento, categoria e status. Painel com totais (a pagar, vencidas, pago no mês, saldo), filtros e busca.
 - **Custo fixo por pedido**: calculadora que divide o custo fixo total do mês pela quantidade média de pedidos, com atalho pra puxar automaticamente o total de despesas da categoria "Fixas" pagas no mês.
-- **Precificação de produtos**: cadastro de produtos com custo do produto, custo fixo da operação (puxado automaticamente da calculadora acima), taxa fixa de marketplace, comissão de marketplace e de afiliado, imposto, embalagem, ads e outros custos personalizados. Ao escolher o campo "Marketplace" (Shopee, Mercado Livre, Shein ou TikTok Shop), a taxa fixa e a comissão já vêm preenchidas com valores de referência daquele marketplace — ainda editáveis manualmente. Mostra em tempo real a margem de contribuição, o lucro no preço de venda informado, e o preço recomendado para atingir a meta de lucro (padrão 10%).
-  - Taxas de referência usadas: **Shopee** 18% + R$4 · **Mercado Livre** 19% + R$6,75 · **Shein** 18% + R$5 · **TikTok Shop** 16% + R$4 (produto até R$50) ou 12% + R$6 (acima de R$50). Confirme sempre com as taxas reais da sua conta, pois variam por categoria/plano e mudam com frequência.
-  - No TikTok Shop só existe uma opção no seletor — a faixa de comissão (até/acima de R$50) é detectada **automaticamente** pelo preço de venda que você digitar, não tem escolha manual de faixa.
-  - Também tem uma calculadora rápida no topo da mesma página, com abas sempre coloridas por marketplace (Shopee laranja, Mercado Livre amarelo, Shein azul, TikTok preto), sem precisar salvar um produto.
+- **Precificação de produtos**:
+  - **Configurações padrão da precificação**, no topo da página: imposto (%), custo de embalagem (R$), custo fixo da operação (R$) e comissão do afiliado (%) — preenchidos uma única vez e usados automaticamente em toda calculadora e todo produto, sem precisar redigitar por marketplace. Um botão puxa o custo fixo calculado na página "Custo fixo por pedido".
+  - **Calculadora rápida por marketplace**: uma aba por marketplace (Shopee, Mercado Livre, Shein, TikTok Shop — sempre coloridas), sem precisar salvar um produto. Cada aba mostra o essencial (custo do produto, custo de ads, meta de lucro, preço recomendado/de venda, lucro) e esconde as taxas específicas do marketplace num bloco recolhível "⚙️ Configurar taxas do marketplace".
+  - **Meus produtos**: cadastro de produtos com foto (redimensionada automaticamente, só pra facilitar identificar visualmente na lista), marketplace, taxas e demais custos. Cada produto salvo tem um atalho "Ajustar taxas" pra trocar marketplace/taxa fixa/comissão sem abrir o formulário inteiro.
+  - Ao escolher o "Marketplace", a taxa fixa e a comissão já vêm preenchidas com valores de referência: **Shopee** 18% + R$4 · **Shein** 18% + R$5 · **Mercado Livre** — tipo de anúncio Clássico 14%/Premium 19%, frete Grátis R$13,85/Por conta do comprador R$7,95 (ajustáveis em botões separados) · **TikTok Shop** 10% comissão + 6% frete + R$4 fixo (produto até R$50) ou 6% comissão + 6% frete + R$6 fixo (acima de R$50, faixa detectada **automaticamente** pelo preço de venda). Confirme sempre com as taxas reais da sua conta, pois variam por categoria/plano e mudam com frequência.
 - **Backup manual**: exporta todos os dados em `.json` e permite restaurar depois — importante como segurança extra além da nuvem.
 - **Menu lateral (mobile)**: em telas pequenas a navegação vira um menu "☰" que abre pela lateral.
 
@@ -30,6 +32,8 @@ Abra `index.html` diretamente no navegador (local) ou acesse a URL do Netlify de
 
 Tudo é salvo na tabela `financeiro_dados` do Supabase, vinculado ao seu usuário de login (protegido por Row Level Security — só quem faz login com a senha certa vê os dados). Ao logar em qualquer computador com o mesmo email/senha, os dados aparecem sincronizados. Cada login tem seus próprios dados, isolados dos demais.
 
-## Deploy no Netlify
+## Deploy
 
-Arraste a pasta inteira (`NEXUS CONTROL`) para o Netlify (drag-and-drop em app.netlify.com) — ou conecte o repositório do GitHub na Vercel, como já está sendo usado. Não há build step — é só HTML estático. Depois do deploy, acesse a URL de qualquer computador e faça login normalmente.
+Hospedado na **Vercel**, conectado a este repositório do GitHub — cada push na `main` já atualiza https://nexuscontrols.vercel.app automaticamente. Não há build step, é só HTML estático. O Netlify (drag-and-drop em app.netlify.com) também funciona como alternativa avulsa, se precisar.
+
+Se o endereço do site mudar, atualize também em Supabase → Authentication → URL Configuration (Site URL / Redirect URLs) — senão o link de confirmação de email/recuperação de senha aponta pro lugar errado.
